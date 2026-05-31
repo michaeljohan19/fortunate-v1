@@ -136,6 +136,18 @@ export const WishScreen: React.FC<WishScreenProps> = ({ currentUser, onLogout })
   const [draftBio, setDraftBio] = useState(gameState.profileBio || '');
   const activeAvatar = gameState.collection?.find(c => c.id === gameState.profilePicId);
 
+  // Username Editing States
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [draftUsername, setDraftUsername] = useState(gameState.username || currentUser?.username || '');
+  const [usernameError, setUsernameError] = useState('');
+
+  // 3-Day Cooldown Math
+  const COOLDOWN_DAYS = 3;
+  const lastChange = gameState.lastUsernameChange ? new Date(gameState.lastUsernameChange).getTime() : 0;
+  const daysSinceChange = (Date.now() - lastChange) / (1000 * 60 * 60 * 24);
+  const canChangeUsername = daysSinceChange >= COOLDOWN_DAYS;
+  const daysLeft = Math.ceil(COOLDOWN_DAYS - daysSinceChange);
+
   useEffect(() => {
     if (gameState.profileBio) setDraftBio(gameState.profileBio);
   }, [gameState.profileBio]);
@@ -1354,14 +1366,83 @@ const gameTitles: Record<string, string> = {
                 </div>
 
                 {/* Name & Level */}
-                <div>
-                  <h3 className="text-3xl font-black text-white uppercase tracking-tighter truncate max-w-50">
-                    {currentUser?.username || 'PlayerOne'}
-                  </h3>
+                <div className="flex-1 min-w-0">
+                  
+                  {/* Clickable Username Wrapper */}
+                  <div 
+                    className="relative group cursor-pointer inline-block mb-1"
+                    onClick={() => {
+                      if (canChangeUsername) {
+                        setIsEditingUsername(!isEditingUsername);
+                        setUsernameError('');
+                      } else {
+                        setUsernameError(`Cooldown active: ${daysLeft} day(s) remaining.`);
+                      }
+                    }}
+                  >
+                    <h3 className="text-3xl font-black text-white uppercase tracking-tighter truncate px-3 py-1 -ml-3 rounded-xl transition-all group-hover:bg-slate-800">
+                      {gameState.username || currentUser?.username || 'PlayerOne'}
+                    </h3>
+                    
+                    {/* Hover Overlay */}
+                    {canChangeUsername && (
+                      <div className="absolute inset-0 bg-black/70 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                        <span className="text-cyan-400 font-bold text-xs uppercase tracking-widest">Change Name</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Cooldown Error Message */}
+                  {usernameError && !isEditingUsername && (
+                    <p className="text-red-400 text-[10px] mb-3 font-bold animate-pulse">{usernameError}</p>
+                  )}
+
+                  {/* USERNAME EDIT BOX */}
+                  {isEditingUsername && (
+                    <div className="mb-4 p-4 bg-slate-800 rounded-xl border-2 border-slate-700 shadow-inner animate-in fade-in slide-in-from-top-2">
+                      <h4 className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">Enter New Gamer Tag</h4>
+                      <input 
+                        value={draftUsername}
+                        onChange={(e) => setDraftUsername(e.target.value)}
+                        maxLength={15}
+                        placeholder="New Username"
+                        className="w-full bg-slate-900 text-white font-black uppercase text-lg p-3 rounded-lg border-2 border-slate-700 focus:outline-none focus:border-cyan-400 mb-3 transition-colors"
+                      />
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => {
+                            if (draftUsername.trim().length < 3) {
+                              setUsernameError("Name must be at least 3 letters.");
+                              return;
+                            }
+                            // Fires the updated context function!
+                            updateProfile(gameState.profilePicId || null, gameState.profileBio || '', draftUsername.trim());
+                            setIsEditingUsername(false);
+                            setUsernameError('');
+                          }} 
+                          className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-slate-900 text-xs font-black py-2.5 rounded-lg transition-all shadow-lg hover:shadow-cyan-500/25 active:scale-95"
+                        >
+                          SAVE (3-DAY COOLDOWN)
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setIsEditingUsername(false);
+                            setDraftUsername(gameState.username || '');
+                            setUsernameError('');
+                          }} 
+                          className="px-4 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white text-xs font-black rounded-lg transition-all active:scale-95"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      {usernameError && <p className="text-red-400 text-[10px] mt-2 font-bold animate-pulse text-center">{usernameError}</p>}
+                    </div>
+                  )}
+
                   <div className="text-yellow-400 font-bold text-sm tracking-widest uppercase mb-1">
                     Lv. {Math.floor((gameState.collection?.length || 0) / 2) + 1} Hacker
                   </div>
-                  <div className="text-slate-500 text-xs font-bold truncate max-w-50">
+                  <div className="text-slate-500 text-xs font-bold truncate">
                     {currentUser?.email || 'No email linked'}
                   </div>
                 </div>

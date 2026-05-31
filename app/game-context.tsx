@@ -33,6 +33,7 @@ const generateInitialClassMap = () => {
 
 export interface GameState {
   username?: string;
+  lastUsernameChange?: string;
   coins: number
   gems: number
   collection: Character[]
@@ -176,7 +177,7 @@ interface GameContextType {
   claimDailyTask: (taskId: string, reward: number) => void;
   // THE FIX 1: Add consumeBuff to the Interface
   consumeBuff: (buffKey: keyof GameState['activeBuffs']) => void 
-  updateProfile: (picId: string | null, bio: string, username?: string) => void;
+  updateProfile: (profilePicId: string | null, profileBio: string, newUsername?: string)  => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined)
@@ -223,12 +224,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, userId }) 
           // 1. Get the data from the database (which might only be the username right now!)
           const downloadedData = docSnap.data();
           
-          // 2. THE FIX: Safely merge it with the default starting state (prev)
-          setGameState(prev => ({
-            ...prev,              // Keep all the default starting items (coins, dailyProgress, etc.)
-            ...downloadedData,    // Overwrite with anything saved in the database (like the username)
-            taskNotification: null 
-          }));
+          // 2. Safely merge it with the default starting state (prev)
+          setGameState(prev => {
+            const nextState = {
+              ...prev,
+              ...downloadedData,
+              taskNotification: null,
+            };
+            localStorage.setItem('gachaGameState', JSON.stringify(nextState));
+            return nextState;
+          });
         } else {
           // First time player? Save the default starting state
           await setDoc(docRef, gameState);
@@ -308,13 +313,46 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, userId }) 
     }));
   };
 
-  const updateProfile = (picId: string | null, bio: string, username?: string) => {
-    updateAndSaveState(prev => ({
-      ...prev,
-      profilePicId: picId,
-      profileBio: bio,
-      ...(username ? { username } : {}) // Only update if a name is provided
-    }));
+  const updateProfile = async (profilePicId: string | null, profileBio: string, newUsername?: string) => {
+    if (!userId) return;
+
+    try {
+      const docRef = doc(db, 'player_saves', userId);
+      
+      const updates: any = {
+        profilePicId,
+        profileBio
+      };
+
+      // If a new username is provided and it's different from the current one
+      if (newUsername && newUsername !== gameState.username) {
+        updates.username = newUsername;
+        updates.lastUsernameChange = new Date().toISOString(); 
+      }
+
+      await setDoc(docRef, updates, { merge: true });
+
+      updateAndSaveState(prev => ({
+        ...prev,
+        ...updates
+      }));
+
+      const storedSession = localStorage.getItem('arcade_user_session');
+      if (storedSession) {
+        try {
+          const parsed = JSON.parse(storedSession);
+          if (updates.username) {
+            parsed.username = updates.username;
+            localStorage.setItem('arcade_user_session', JSON.stringify(parsed));
+          }
+        } catch {
+          // Ignore malformed stored session
+        }
+      }
+      
+    } catch (error) {
+      console.error("🚨 FIREBASE SAVE FAILED:", error);
+    }
   };
 
   const pullCards = (amount: number): Character[] => {
