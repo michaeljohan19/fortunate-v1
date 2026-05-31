@@ -20,12 +20,13 @@ import { SyntaxSprintGame } from '@/components/games/syntax-sprint'
 import { ClassTriviaGame } from '@/components/games/class-trivia'
 import { ClassmateCombatGame } from '@/components/games/classmate-combat'
 import { CharacterCard } from './character-card'
+import { ClassStanding } from './class-standing';
 
 
 type View = 'wish' | 'games' | 'daily' | 'collection' | 'leaderboard' | 'assignments' ;
 
 interface WishScreenProps {
-  currentUser?: { username: string; email: string; uid: string } | null;
+  currentUser?: { username: string; email: string; uid: string} | null;
   onLogout: () => void;
 }
 
@@ -225,56 +226,6 @@ const gameTitles: Record<string, string> = {
     { id: 'coffee-run', icon: '🏃‍♂️', title: 'Caffeine Rush', desc: 'Score 100+ distance in Caffeine Dash.', reward: 40 },
     { id: 'syntax-sprint', icon: '⚡', title: 'Fast Fingers', desc: 'Achieve 30+ WPM in Syntax Sprint.', reward: 50 },
   ];
-
-  // --- REAL-TIME LEADERBOARD LOGIC ---
-  // 1. Calculate the player's real-time pulls!
-  const player5Stars = gameState.collection.filter(c => c.rarity === '5-star').length;
-  const player4Stars = gameState.collection.filter(c => c.rarity === '4-star').length;
-  const player3Stars = gameState.collection.filter(c => c.rarity === '3-star').length;
-
-  // The Power Formula
-  const calculatePower = (stars5: number, stars4: number, stars3: number = 0) => {
-    return (stars5 * 100) + (stars4 * 20) + (stars3 * 1);
-  };
-  const playerScore = calculatePower(player5Stars, player4Stars, player3Stars);
-  
-  interface LeaderboardEntry {
-    id: string;
-    username: string;
-    avatar: string;
-    stars5: number;
-    stars4: number;
-    score: number;
-    isPlayer?: boolean; // The '?' makes it optional so mock players don't need it!
-  }
-
-  // 2. The Mock Competitors
-  const MOCK_PLAYERS: LeaderboardEntry[] = [
-    { id: 'bot1', username: 'Gacha God', avatar: '👑', stars5: 87, stars4: 120, score: calculatePower(87, 120, 50) },
-    { id: 'bot2', username: 'Lucky Spinner', avatar: '✨', stars5: 72, stars4: 95, score: calculatePower(72, 95, 40) },
-    { id: 'bot3', username: 'Card Collector', avatar: '🎯', stars5: 58, stars4: 80, score: calculatePower(58, 80, 20) },
-    { id: 'bot4', username: 'Whale Watcher', avatar: '🐋', stars5: 45, stars4: 60, score: calculatePower(45, 60, 15) },
-    { id: 'bot5', username: 'Pity Breaker', avatar: '💔', stars5: 30, stars4: 150, score: calculatePower(30, 150, 100) },
-    { id: 'bot6', username: 'RNGesus', avatar: '🙏', stars5: 25, stars4: 40, score: calculatePower(25, 40, 10) },
-    { id: 'bot7', username: 'Dolphin', avatar: '🐬', stars5: 15, stars4: 50, score: calculatePower(15, 50, 30) },
-    { id: 'bot8', username: 'Minnow', avatar: '🐟', stars5: 10, stars4: 30, score: calculatePower(10, 30, 20) },
-    { id: 'bot9', username: 'F2P BTW', avatar: '🤡', stars5: 2, stars4: 15, score: calculatePower(2, 15, 5) },
-  ];
-
-  // 3. Combine and Sort!
-  const currentLeaderboard: LeaderboardEntry[] = [
-    ...MOCK_PLAYERS, 
-    { id: 'player', username: 'You (Player)', avatar: '🧑‍💻', stars5: player5Stars, stars4: player4Stars, score: playerScore, isPlayer: true }
-  ]
-  .sort((a, b) => {
-    // Tie-Breaker 1: Highest Total Score
-    if (b.score !== a.score) return b.score - a.score;
-    // Tie-Breaker 2: Most 5-Stars
-    if (b.stars5 !== a.stars5) return b.stars5 - a.stars5;
-    // Tie-Breaker 3: Perfect Tie? Alphabetical by username
-    return a.username.localeCompare(b.username);
-  })
-  .slice(0, 10); // Keep only Top 10
 
   return (
     <div className="w-screen h-screen bg-background text-foreground overflow-hidden flex flex-col">
@@ -699,8 +650,8 @@ const gameTitles: Record<string, string> = {
                   <button 
                     disabled={hasClaimedToday}
                     onClick={() => {
-                      checkDailyLogin()
                       completeDailyTask('login')
+                      checkDailyLogin()
                     }}
                     className={`group relative px-8 md:px-12 py-4 md:py-6 rounded-xl md:rounded-2xl font-black text-lg md:text-2xl text-slate-900 overflow-hidden transition-all duration-300 ${
                       hasClaimedToday 
@@ -1077,101 +1028,8 @@ const gameTitles: Record<string, string> = {
             RENDER: CLASS STANDING (LEADERBOARD)
             ========================================== */}
         {currentView === 'leaderboard' && (
-          <div className="py-8 max-w-5xl mx-auto fade-in flex flex-col items-center">
-            
-            {/* Header */}
-            <div className="text-center mb-10">
-              <h2 className="text-4xl md:text-5xl font-black text-amber-400 mb-2 uppercase tracking-tight drop-shadow-md">
-                Class Standing
-              </h2>
-              <p className="text-slate-400 font-bold tracking-widest uppercase text-sm">
-                Ranked by 5-Star & 4-Star Collection
-              </p>
-            </div>
-
-            {/* The Dynamic Pyramid Board */}
-            <div className="w-full flex flex-col items-center gap-3 md:gap-4 px-4">
-              {currentLeaderboard.map((player, idx) => {
-                
-                // 1. Dynamic Styling based on Rank
-                let rankStyle = '';
-                let widthClass = '';
-                let textClass = '';
-
-                if (idx === 0) {
-                  // GOLD - #1 
-                  rankStyle = 'bg-linear-to-r from-yellow-600 to-yellow-400 border-2 border-yellow-200 shadow-[0_0_30px_rgba(250,204,21,0.5)] z-30';
-                  widthClass = 'max-w-4xl w-full p-5 md:p-6';
-                  textClass = 'text-xl md:text-2xl text-yellow-950';
-                } else if (idx === 1) {
-                  // SILVER - #2
-                  rankStyle = 'bg-linear-to-r from-slate-400 to-slate-300 border-2 border-slate-100 shadow-[0_0_20px_rgba(203,213,225,0.4)] z-20';
-                  widthClass = 'max-w-3xl w-full p-4 md:p-5';
-                  textClass = 'text-lg md:text-xl text-slate-900';
-                } else if (idx === 2) {
-                  // BRONZE - #3
-                  rankStyle = 'bg-linear-to-r from-orange-700 to-orange-500 border-2 border-orange-300 shadow-[0_0_15px_rgba(249,115,22,0.4)] z-10';
-                  widthClass = 'max-w-2xl w-full p-3 md:p-4';
-                  textClass = 'text-base md:text-lg text-white';
-                } else {
-                  // REST - #4 to #10
-                  rankStyle = 'bg-slate-800/80 border border-slate-600 hover:bg-slate-700 transition-colors shadow-lg';
-                  widthClass = 'max-w-xl w-full p-3';
-                  textClass = 'text-sm md:text-base text-slate-200';
-                }
-
-                // Highlight the player's own card!
-                if (player.isPlayer && idx > 2) {
-                  rankStyle += ' border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)] bg-cyan-900/40';
-                }
-
-                return (
-                  <div 
-                    key={player.id} 
-                    className={`rounded-2xl flex items-center justify-between transform transition-all duration-500 hover:scale-[1.02] ${rankStyle} ${widthClass}`}
-                    style={{ animationDelay: `${idx * 100}ms` }} // Staggered fade in
-                  >
-                    
-                    {/* LEFT: Rank & Avatar */}
-                    <div className="flex items-center gap-4">
-                      <div className={`font-black shrink-0 text-center ${idx < 3 ? 'w-10' : 'w-8 text-slate-500'}`}>
-                        #{idx + 1}
-                      </div>
-                      
-                      {/* Avatar Placeholder */}
-                      <div className={`flex items-center justify-center rounded-full bg-slate-900/30 border-2 border-white/20 shadow-inner shrink-0 ${idx === 0 ? 'w-16 h-16 text-3xl' : idx === 1 ? 'w-14 h-14 text-2xl' : idx === 2 ? 'w-12 h-12 text-xl' : 'w-10 h-10 text-lg'}`}>
-                        {player.avatar}
-                      </div>
-                      
-                      <div className={`font-black tracking-tight truncate ${textClass} ${player.isPlayer ? 'text-cyan-300' : ''}`}>
-                        {player.username}
-                        <div className="text-[10px] uppercase tracking-widest font-bold opacity-60">
-                            Rating: {player.score.toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* RIGHT: Stats Badges */}
-                    <div className="flex items-center gap-2 md:gap-3 shrink-0 ml-4">
-                      {/* 5-Star Badge */}
-                      <div className="flex flex-col items-center bg-slate-900/60 rounded-lg px-3 md:px-4 py-1.5 border border-white/20 shadow-inner">
-                        <span className="text-[9px] md:text-[11px] font-black uppercase text-amber-300 tracking-widest">5-Star</span>
-                        <span className={`font-black leading-none mt-1 ${idx < 3 ? textClass : 'text-amber-400'}`}>
-                          {player.stars5}
-                        </span>
-                      </div>
-                      {/* 4-Star Badge */}
-                      <div className="flex flex-col items-center bg-slate-900/40 rounded-lg px-2 md:px-3 py-1 border border-white/10">
-                        <span className="text-[8px] md:text-[10px] font-black uppercase text-purple-300 tracking-widest">4-Star</span>
-                        <span className={`font-black leading-none mt-0.5 ${idx < 3 ? textClass : 'text-purple-300'}`}>
-                          {player.stars4}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+          <div className="w-full h-full overflow-y-auto">
+            <ClassStanding />
           </div>
         )}
       </div>
@@ -1503,7 +1361,7 @@ const gameTitles: Record<string, string> = {
                       availableAvatars.map((char, idx) => (
                         <button 
                           key={idx}
-                          onClick={() => { updateProfile(char.id, gameState.profileBio || ''); setShowAvatarSelect(false); }}
+                          onClick={() => { updateProfile(char.id, gameState.profileBio || '', gameState.username); setShowAvatarSelect(false); }}
                           className={`aspect-square relative rounded-lg bg-slate-700 flex items-center justify-center border-2 transition-all overflow-hidden ${gameState.profilePicId === char.id ? 'border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]' : 'border-transparent hover:border-slate-500'}`}
                         >
                           {/* Mini rarity indicator so they know it's a 5-star! */}
@@ -1548,7 +1406,7 @@ const gameTitles: Record<string, string> = {
                     onClick={() => {
                       if (isEditingBio) {
                         // 👇 Saves to database when they click 'Save'!
-                        updateProfile(gameState.profilePicId || null, draftBio);
+                        updateProfile(gameState.profilePicId || null, draftBio, gameState.username);
                       }
                       setIsEditingBio(!isEditingBio);
                     }}

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useGame, Character } from '@/app/game-context'
+import { InstructionModal, Rule } from '@/components/instruction-modal'
 
 // --- UPDATED ECONOMY BALANCING ---
 // 1 Hour, 3 Hours, 6 Hours.
@@ -38,6 +39,8 @@ export const LabDutyGame: React.FC = () => {
   
   // NEW: State for the flashy reward pop-up
   const [claimReward, setClaimReward] = useState<ClaimResult | null>(null)
+
+  const [showInstructions, setShowInstructions] = useState(false)
 
   // --- PERSISTENCE & TIMERS ---
   useEffect(() => {
@@ -123,8 +126,64 @@ export const LabDutyGame: React.FC = () => {
   if (!isLoaded) return null
 
   return (
-    <div className="max-w-4xl mx-auto fade-in">
-      <div className="text-center mb-8">
+    <div className="max-w-4xl mx-auto fade-in relative">
+      
+      {/* INFO BUTTON (Upper Right Corner) */}
+      <button 
+        onClick={() => setShowInstructions(true)}
+        className="absolute top-0 md:top-2 right-4 md:right-0 z-30 w-8 h-8 bg-slate-800/80 hover:bg-slate-700 border-2 border-slate-500 rounded-full flex items-center justify-center text-slate-300 hover:text-white hover:border-cyan-400 font-black text-sm shadow-lg backdrop-blur-sm transition-all"
+        title="Lab Protocol"
+      >
+        ?
+      </button>
+
+      {/* ==========================================
+          INSTRUCTION MODAL (Pop-up Overlay)
+          ========================================== */}
+      {showInstructions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fade-in">
+          <div className="bg-slate-800 border-4 border-slate-600 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button 
+              onClick={() => setShowInstructions(false)}
+              className="absolute top-3 right-4 text-slate-400 hover:text-white font-black text-xl transition-colors"
+            >
+              ✕
+            </button>
+            
+            <h3 className="text-2xl font-black text-cyan-400 mb-4 uppercase tracking-wider flex items-center gap-2">
+              <span className="bg-cyan-400 text-slate-900 w-8 h-8 rounded-full flex items-center justify-center text-lg">?</span>
+              Lab Protocol
+            </h3>
+
+            <div className="space-y-4 text-sm text-slate-300">
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                <h4 className="text-amber-400 font-bold uppercase tracking-widest mb-2 border-b border-slate-700 pb-1">Passive Expeditions</h4>
+                <p>Dispatch your unused Classmates and Professors to the lab to earn passive income. <strong className="text-white">Timers continue running in real-time</strong>, even when you log out of the game!</p>
+              </div>
+              
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                <h4 className="text-amber-400 font-bold uppercase tracking-widest mb-2 border-b border-slate-700 pb-1">Time vs. Yield</h4>
+                <p>Longer tasks (like Compiling Custom Kernels) yield exponentially more <strong>Coins</strong> and have a significantly higher chance to drop premium <strong>Gems</strong> upon completion.</p>
+              </div>
+
+              <div className="bg-cyan-900/20 p-4 rounded-xl border border-cyan-500/30">
+                <h4 className="text-purple-400 font-bold uppercase tracking-widest mb-2 border-b border-slate-700 pb-1">The 5-Star Advantage</h4>
+                <p>Assigning a <strong className="text-amber-400">5-Star character</strong> to any task will automatically grant a massive <strong className="text-amber-400">+50% Loot Bonus</strong> to the final coin payout.</p>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowInstructions(false)}
+              className="w-full mt-6 bg-slate-700 hover:bg-slate-600 hover:text-cyan-400 text-white font-black py-3 rounded-xl uppercase tracking-widest transition-colors shadow-lg"
+            >
+              Understood
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="text-center mb-8 mt-4 md:mt-0">
         <h2 className="text-4xl md:text-5xl font-black text-cyan-400 mb-2 drop-shadow-md">LAB DUTY</h2>
         <p className="text-blue-300">Dispatch your roster to complete tasks and earn passive resources.</p>
       </div>

@@ -52,6 +52,7 @@ export const ClassmateCombatGame: React.FC<TerminalCombatProps> = ({ onComplete 
 
   // 2. NEW STATE: Controls the Rules Modal visibility
   const [showRules, setShowRules] = useState(false)
+  const [showInstructions, setShowInstructions] = useState(false);
 
   // 3. DEFINE THE RULES DATA
   const combatRules: Rule[] = [
@@ -429,27 +430,110 @@ export const ClassmateCombatGame: React.FC<TerminalCombatProps> = ({ onComplete 
   const playerClassData = playerClass ? CLASS_INFO[playerClass as keyof typeof CLASS_INFO] : null;
 
   return (
-    <div className="max-w-3xl mx-auto fade-in">
+    <div className="max-w-3xl mx-auto fade-in relative">
       
-      {/* 1. Main Wrapper (Removed the bg-[url] classes from here!) */}
-      <div className="rounded-t-2xl p-6 md:p-8 relative min-h-[400px] border-4 border-slate-700 overflow-hidden shadow-inner bg-slate-900">
+      {/* ==========================================
+          INSTRUCTION MODAL (Pop-up Overlay)
+          ========================================== */}
+      {showInstructions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm fade-in">
+          <div className="bg-slate-800 border-4 border-slate-600 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button 
+              onClick={() => setShowInstructions(false)}
+              className="absolute top-3 right-4 text-slate-400 hover:text-white font-black text-xl transition-colors"
+            >
+              ✕
+            </button>
+            
+            <h3 className="text-2xl font-black text-amber-400 mb-4 uppercase tracking-wider flex items-center gap-2">
+              <span className="bg-amber-400 text-slate-900 w-8 h-8 rounded-full flex items-center justify-center text-lg">?</span>
+              Battle Manual
+            </h3>
+
+            <div className="space-y-4 text-sm text-slate-300">
+              {/* Stat Definitions */}
+              <div>
+                <h4 className="text-cyan-400 font-bold uppercase tracking-widest mb-2 border-b border-slate-700 pb-1">Move Stats</h4>
+                <ul className="space-y-2">
+                  <li className="flex gap-2">
+                    <strong className="text-white w-12 shrink-0">PWR:</strong> 
+                    <span><strong className="text-amber-400">Power.</strong> The base damage the attack will deal to the enemy.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <strong className="text-white w-12 shrink-0">ACC:</strong> 
+                    <span><strong className="text-green-400">Accuracy.</strong> The percentage chance (%) the move will successfully hit.</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Class Advantages */}
+              <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700 mt-4">
+                <h4 className="text-purple-400 font-bold uppercase tracking-widest mb-2 text-center">Class Advantages</h4>
+                <p className="text-[10px] text-center text-slate-500 mb-3 font-bold uppercase tracking-wider">Stronger class deals bonus damage</p>
+                
+                {/* UPDATE THESE TO MATCH YOUR ACTUAL CLASSES */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-center items-center gap-3 font-black text-xs md:text-sm">
+                    <span className="text-red-400 w-20 text-right">Software</span>
+                    <span className="text-slate-600 text-[10px] uppercase"> ➔</span>
+                    <span className="text-blue-400 w-20 text-left">Data</span>
+                  </div>
+                  <div className="flex justify-center items-center gap-3 font-black text-xs md:text-sm">
+                    <span className="text-blue-400 w-20 text-right">Data</span>
+                    <span className="text-slate-600 text-[10px] uppercase"> ➔</span>
+                    <span className="text-green-400 w-20 text-left">ML</span>
+                  </div>
+                  <div className="flex justify-center items-center gap-3 font-black text-xs md:text-sm">
+                    <span className="text-green-400 w-20 text-right">ML</span>
+                    <span className="text-slate-600 text-[10px] uppercase">➔</span>
+                    <span className="text-purple-400 w-20 text-left">Networks</span>
+                  </div>
+                  <div className="flex justify-center items-center gap-3 font-black text-xs md:text-sm">
+                    <span className="text-purple-400 w-20 text-right">Networks</span>
+                    <span className="text-slate-600 text-[10px] uppercase">➔</span>
+                    <span className="text-red-400 w-20 text-left">Software</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setShowInstructions(false)}
+              className="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white font-black py-3 rounded-xl uppercase tracking-widest transition-colors shadow-lg"
+            >
+              Understood
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 1. Main Wrapper */}
+      <div className="rounded-t-2xl p-6 md:p-8 relative min-h-100 border-4 border-slate-700 overflow-hidden shadow-inner bg-slate-900">
         
-        {/* 👇 NEW: The Background Image Layer */}
-        {/* We use inline styles to apply the imported image source, and Tailwind for the blur/opacity */}
+        {/* INFO BUTTON (Upper Right Corner) */}
+        <button 
+          onClick={() => setShowInstructions(true)}
+          className="absolute top-4 right-4 z-30 w-8 h-8 bg-slate-800/80 hover:bg-slate-700 border-2 border-slate-500 rounded-full flex items-center justify-center text-slate-300 hover:text-white hover:border-amber-400 font-black text-sm shadow-lg backdrop-blur-sm transition-all"
+          title="Battle Manual"
+        >
+          ?
+        </button>
+
+        {/* The Background Image Layer */}
         <div 
           className="absolute inset-0 z-0 bg-cover bg-center opacity-200 blur-sm scale-105"
           style={{ backgroundImage: `url(${battleBackground.src})` }}
         />
 
-        {/* 2. Dark Tint Overlay (Keeps the white UI text readable) */}
+        {/* 2. Dark Tint Overlay */}
         <div className="absolute inset-0 bg-black/50 z-10"></div>
 
         {/* ==========================================
             ENEMY SECTION (Top Right)
             ========================================== */}
-        <div className="absolute top-8 right-8 flex items-center gap-4 z-20">
+        <div className="absolute top-12 right-8 flex items-center gap-4 z-20">
           
-          {/* Enemy HUD (Now placed to the LEFT of the enemy sprite) */}
+          {/* Enemy HUD */}
           <div className="bg-white/95 backdrop-blur-sm border-4 border-slate-800 rounded-xl p-3 w-48 shadow-2xl">
             <div className="flex justify-between font-black text-slate-800 text-sm uppercase tracking-tighter">
               <span className="truncate pr-2">{enemy.name}</span>
@@ -466,7 +550,7 @@ export const ClassmateCombatGame: React.FC<TerminalCombatProps> = ({ onComplete 
             </div>
           </div>
 
-          {/* Enemy Sprite (With Red Glow) */}
+          {/* Enemy Sprite */}
           <div className={`transform transition-transform ${turn === 'processing' ? 'animate-bounce' : ''}`}>
             {enemy.image ? (
               <div className="w-28 h-28 md:w-36 md:h-36 relative rounded-full overflow-hidden border-4 border-red-500 shadow-[0_0_25px_rgba(239,68,68,0.7)] bg-slate-800">
@@ -483,7 +567,7 @@ export const ClassmateCombatGame: React.FC<TerminalCombatProps> = ({ onComplete 
             ========================================== */}
         <div className="absolute bottom-8 left-8 flex items-center gap-4 z-20">
           
-          {/* Player Sprite (With Cyan/Blue Glow) */}
+          {/* Player Sprite */}
           <div className={`transform transition-transform ${turn === 'enemy' ? 'animate-bounce' : ''}`}>
             {player.image ? (
               <div className="w-28 h-28 md:w-36 md:h-36 relative rounded-full overflow-hidden border-4 border-cyan-400 shadow-[0_0_25px_rgba(34,211,238,0.7)] bg-slate-800">
@@ -494,7 +578,7 @@ export const ClassmateCombatGame: React.FC<TerminalCombatProps> = ({ onComplete 
             )}
           </div>
 
-          {/* Player HUD (Now placed to the RIGHT of the player sprite) */}
+          {/* Player HUD */}
           <div className="bg-white/95 backdrop-blur-sm border-4 border-slate-800 rounded-xl p-3 w-56 shadow-2xl">
             <div className="flex justify-between font-black text-slate-800 text-sm uppercase tracking-tighter">
               <span className="truncate pr-2">{player.name}</span>

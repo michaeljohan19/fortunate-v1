@@ -27,7 +27,7 @@ export const TaskNotification: React.FC = () => {
 
   return (
     <div 
-      className={`fixed bottom-6 right-6 z-[100] transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] ${
+      className={`fixed bottom-6 right-6 z-100 transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] ${
         visible ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-12 opacity-0 scale-95 pointer-events-none'
       }`}
     >
@@ -37,7 +37,7 @@ export const TaskNotification: React.FC = () => {
         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
         {/* Icon */}
-        <div className="bg-slate-800 border border-slate-700 w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+        <div className="bg-slate-800 border border-slate-700 w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 shadow-inner">
           {currentNotif.icon}
         </div>
 

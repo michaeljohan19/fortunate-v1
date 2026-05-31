@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { auth, googleProvider } from '@/lib/firebase';
+import { auth, googleProvider, db } from '@/lib/firebase'; // 👇 ADDED 'db' HERE
+import { doc, setDoc, getDoc } from 'firebase/firestore'; // 👇 ADDED FIRESTORE FUNCTIONS
 import { 
   signInWithPopup, 
   createUserWithEmailAndPassword, 
@@ -8,7 +9,6 @@ import {
 } from 'firebase/auth';
 
 // --- TYPES ---
-// 👇 NEW: Added 'choose-username' to our views
 type AuthView = 'login' | 'signup' | 'forgot' | 'choose-username';
 
 interface AuthScreenProps {
@@ -23,7 +23,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   
-  // 👇 NEW: Temporary state to hold the Google email while they pick a username
+  // Temporary state to hold the Google email while they pick a username
   const [pendingGoogleEmail, setPendingGoogleEmail] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
@@ -47,13 +47,19 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
     try {
       if (view === 'signup') {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
-        // 👇 UPDATE: Grab the UID and pass it to the saved user
+        
+        // 👇 THE FIX 1: Save custom username to Firestore immediately upon signup!
+        await setDoc(doc(db, 'player_saves', cred.user.uid), {
+          username: username.trim()
+        }, { merge: true });
+
         const loggedInUser = { username, email, uid: cred.user.uid };
         localStorage.setItem('arcade_user_session', JSON.stringify(loggedInUser));
         onLoginSuccess(loggedInUser);
       } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
-        // 👇 UPDATE: Grab the UID (Mocking username since Firebase email login doesn't store it by default)
+        // Note: For standard login, we don't necessarily know their username here unless we fetch it. 
+        // For now, setting a placeholder in local session is fine if game-context fetches the real one.
         const loggedInUser = { username: 'Student', email, uid: cred.user.uid };
         localStorage.setItem('arcade_user_session', JSON.stringify(loggedInUser));
         onLoginSuccess(loggedInUser);
@@ -67,20 +73,32 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
     }
   };
 
-  // --- GOOGLE HANDLER (INTERCEPTED) ---
+  // --- GOOGLE HANDLER (SMART INTERCEPT) ---
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setErrorMsg('');
 
     try {
-      // 1. Trigger the Google Popup
       const result = await signInWithPopup(auth, googleProvider);
       
-      // 2. Save their email temporarily
-      setPendingGoogleEmail(result.user.email || '');
-      
-      // 3. Switch to the Username selection screen! (DO NOT log them in yet)
-      setView('choose-username');
+      // 👇 THE FIX: Check the database before deciding where to send them!
+      const userRef = doc(db, 'player_saves', result.user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists() && userSnap.data().username) {
+        // SCENARIO 1: They already have an account! Log them straight in.
+        const existingUser = {
+          username: userSnap.data().username,
+          email: result.user.email || '',
+          uid: result.user.uid
+        };
+        localStorage.setItem('arcade_user_session', JSON.stringify(existingUser));
+        onLoginSuccess(existingUser);
+      } else {
+        // SCENARIO 2: Brand new player! Send them to the username screen.
+        setPendingGoogleEmail(result.user.email || '');
+        setView('choose-username');
+      }
 
     } catch (error: any) {
       console.error("Google Sign-In Error:", error);
@@ -90,11 +108,10 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
     }
   };
 
-  // 👇 NEW: FINAL GOOGLE SUBMIT HANDLER
-  const handleGoogleUsernameSubmit = (e: React.FormEvent) => {
+  // --- FINAL GOOGLE SUBMIT HANDLER ---
+  const handleGoogleUsernameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 1. THE FIX: Check if Firebase actually has the user before proceeding!
     if (!auth.currentUser) {
       setErrorMsg("Authentication lost. Please try signing in again.");
       return;
@@ -105,17 +122,24 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
       return;
     }
 
-    // 2. Combine their chosen username with their Google Email
-    const finalGoogleUser = { 
-      username: username.trim(), 
-      email: pendingGoogleEmail,
-      // 3. THE FIX: Because of the check above, TypeScript now 100% KNOWS this is a string!
-      uid: auth.currentUser.uid 
-    };
-    
-    // 4. Save and enter the game!
-    localStorage.setItem('arcade_user_session', JSON.stringify(finalGoogleUser));
-    onLoginSuccess(finalGoogleUser);
+    try {
+      // 👇 THE FIX 2: Save the custom username to Firestore immediately!
+      await setDoc(doc(db, 'player_saves', auth.currentUser.uid), {
+        username: username.trim()
+      }, { merge: true });
+
+      const finalGoogleUser = { 
+        username: username.trim(), 
+        email: pendingGoogleEmail,
+        uid: auth.currentUser.uid 
+      };
+      
+      localStorage.setItem('arcade_user_session', JSON.stringify(finalGoogleUser));
+      onLoginSuccess(finalGoogleUser);
+    } catch (error: any) {
+      console.error("Error saving username:", error);
+      setErrorMsg("Failed to save profile. Please try again.");
+    }
   };
 
   // --- PASSWORD RESET ---
@@ -159,7 +183,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
       <div className="w-full max-w-md relative z-10 fade-in">
         
         <div className="text-center mb-8">
-          <h1 className="text-5xl md:text-6xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] tracking-tighter">
+          <h1 className="text-5xl md:text-6xl font-black italic text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-purple-600 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] tracking-tighter">
             FORTUNATE
           </h1>
           <p className="text-slate-400 font-bold tracking-widest text-sm uppercase mt-2">
@@ -233,12 +257,13 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
-                Sign in with Gmail
+                {/* 👇 THE FIX: Changes text based on the active tab! */}
+                {view === 'login' ? 'Log in with Google' : 'Sign up with Google'}
               </button>
             </form>
           )}
 
-          {/* 👇 NEW: GOOGLE USERNAME INTERCEPT VIEW */}
+          {/* GOOGLE USERNAME INTERCEPT VIEW */}
           {view === 'choose-username' && (
             <form onSubmit={handleGoogleUsernameSubmit} className="text-center animate-fade-in space-y-4">
               <h3 className="text-xl font-black text-white uppercase tracking-wider mb-2">Welcome!</h3>
@@ -258,7 +283,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
               <button 
                 type="button" 
                 onClick={() => {
-                  auth.signOut(); // Clean up the firebase session if they cancel
+                  auth.signOut();
                   setView('login');
                 }} 
                 className="text-xs font-bold text-slate-500 hover:text-yellow-400 uppercase tracking-widest pt-4 transition-colors"

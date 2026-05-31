@@ -31,6 +31,7 @@ const generateInitialClassMap = () => {
 };
 
 export interface GameState {
+  username?: string;
   coins: number
   gems: number
   collection: Character[]
@@ -174,14 +175,14 @@ interface GameContextType {
   claimDailyTask: (taskId: string, reward: number) => void;
   // THE FIX 1: Add consumeBuff to the Interface
   consumeBuff: (buffKey: keyof GameState['activeBuffs']) => void 
-  updateProfile: (picId: string | null, bio: string) => void;
+  updateProfile: (picId: string | null, bio: string, username?: string) => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined)
 
 export const GameProvider: React.FC<GameProviderProps> = ({ children, userId }) => {
   const [gameState, setGameState] = useState<GameState>({
-    coins: 1000,
+    coins: 2000,
     gems: 10,
     collection: [],
     dailyLoginStreak: 0,
@@ -211,21 +212,24 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, userId }) 
   // --- LOAD GAME STATE ---
   useEffect(() => {
     const loadData = async () => {
-      if (!userId) return; // If no user is logged in, do nothing
+      if (!userId) return; 
       
       try {
         const docRef = doc(db, 'player_saves', userId);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-          // 1. Catch the data from the database first
-          const data = docSnap.data() as GameState;
+          // 1. Get the data from the database (which might only be the username right now!)
+          const downloadedData = docSnap.data();
           
-          // 2. 👇 Put it in state, but explicitly force the notification to be null!
-          setGameState({ ...data, taskNotification: null }); 
-          
+          // 2. THE FIX: Safely merge it with the default starting state (prev)
+          setGameState(prev => ({
+            ...prev,              // Keep all the default starting items (coins, dailyProgress, etc.)
+            ...downloadedData,    // Overwrite with anything saved in the database (like the username)
+            taskNotification: null 
+          }));
         } else {
-          // First time player? Save the default starting state to the database
+          // First time player? Save the default starting state
           await setDoc(docRef, gameState);
         }
       } catch (error) {
@@ -234,7 +238,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, userId }) 
     };
     
     loadData();
-  }, [userId]); // This runs once when the component mounts or userId changes
+  }, [userId]);
 
   // --- SAFE SAVE HELPER (RACE-CONDITION PROOF) ---
   const updateAndSaveState = (newState: React.SetStateAction<GameState>) => {
@@ -303,11 +307,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, userId }) 
     }));
   };
 
-  const updateProfile = (picId: string | null, bio: string) => {
+  const updateProfile = (picId: string | null, bio: string, username?: string) => {
     updateAndSaveState(prev => ({
       ...prev,
       profilePicId: picId,
-      profileBio: bio
+      profileBio: bio,
+      ...(username ? { username } : {}) // Only update if a name is provided
     }));
   };
 
@@ -389,8 +394,20 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, userId }) 
       };
       
       // Force TypeScript to accept our clean object as a Character
-      pulledResults.push(cleanChar as Character);
+     pulledResults.push(cleanChar as Character);
     } // <-- End of the for loop
+
+    // 👇 THE FIX: Shuffle the results array!
+    // This takes the guaranteed 10th card and hides it in a random spot 
+    // so the player doesn't know when the shiny pull is coming.
+    if (amount > 1) {
+      for (let i = pulledResults.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = pulledResults[i];
+        pulledResults[i] = pulledResults[j];
+        pulledResults[j] = temp;
+      }
+    }
 
     // 👇 Save to state (and automatically to Firebase!)
     updateAndSaveState(prev => ({

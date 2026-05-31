@@ -6,6 +6,7 @@ import { WishScreen } from '@/components/wish-screen'
 import { TaskNotification } from '@/components/task-notif' 
 // 👇 1. Import your new AuthScreen component (adjust path if needed)
 import AuthScreen from '@/components/auth-screen' 
+import { auth } from '@/lib/firebase' // Import Firebase auth for logout functionality
 
 // Main gacha wish page
 export default function Page() {
@@ -19,10 +20,20 @@ export default function Page() {
     setIsAuthenticated(true);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('arcade_user_session'); // Wipe the session
-    setUserData(null);
-    setIsAuthenticated(false); // Sends them back to the AuthScreen!
+  const handleLogout = async () => {
+    try {
+      // 1. Tell Firebase to kill the cloud session
+      await auth.signOut();
+      
+      // 2. Tell the browser to completely wipe its memory
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // 3. Force a hard reload of the website to dump the RAM
+      window.location.reload();
+    } catch (error) {
+      console.error("Logout Error:", error);
+    }
   };
 
   // 👇 4. Gatekeeper: If they aren't logged in, show the Auth Screen!
