@@ -4,6 +4,7 @@ import image from 'next/image';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { WelcomeModal } from '@/components/welcome-modal'; // Adjust the path if needed!
 
 export type Rarity = '3-star' | '4-star' | '5-star';
 

@@ -56,23 +56,17 @@ const characters = [
 ]
 
 export const WishBanner: React.FC = () => {
-  // Start with a random character right on the initial load, or keep it at index 0 if you prefer
   const [featured, setFeatured] = useState(characters[0])
 
   useEffect(() => {
     const interval = setInterval(() => {
-      // Pick a random number from 0 up to (but not including) the length of the array
       const randomIndex = Math.floor(Math.random() * characters.length)
-      
-      // Update the featured character
       setFeatured(characters[randomIndex])
     }, 5000)
 
-    // Cleanup the interval when the component unmounts
     return () => clearInterval(interval)
-  }, []) // <-- Empty dependency array!
+  }, [])
 
-  // --- Dynamic Styling Logic for Character Frame ---
   const is5Star = featured.rarity === '5-star'
   const charBorder = is5Star ? 'border-amber-400' : 'border-purple-400'
   const charGlow = is5Star ? 'shadow-amber-400/50' : 'shadow-purple-500/50'
@@ -80,9 +74,17 @@ export const WishBanner: React.FC = () => {
   const silhouette = is5Star ? 'bg-amber-300' : 'bg-purple-500'
 
   return (
-    /* FIXED: Restored border-amber-400/30 to the main container */
     <div className="w-full h-full relative overflow-hidden bg-linear-to-b from-slate-900 via-slate-950 to-black rounded-2xl border-4 border-amber-400/30 shadow-2xl">
       
+      {/* 👇 NEW: INFO BUTTON (Upper Right) */}
+      <button 
+        onClick={() => window.dispatchEvent(new Event('open-welcome-modal'))}
+        className="absolute top-4 right-4 z-40 w-8 h-8 bg-slate-800/80 hover:bg-slate-700 border-2 border-slate-500 rounded-full flex items-center justify-center text-slate-300 hover:text-white hover:border-amber-400 font-black text-sm shadow-lg backdrop-blur-sm transition-all"
+        title="Show Welcome Tour"
+      >
+        ?
+      </button>
+
       {/* Animated background glow */}
       <div className="absolute inset-0 opacity-20">
         <div className={`absolute top-0 left-1/2 w-96 h-96 blur-3xl rounded-full mix-blend-screen transition-colors duration-1000 ${is5Star ? 'bg-yellow-400' : 'bg-purple-600'}`} />
@@ -120,7 +122,7 @@ export const WishBanner: React.FC = () => {
         </div>
 
         <div className="absolute top-4 left-4 text-4xl opacity-30 animate-pulse">✨</div>
-        <div className="absolute top-4 right-4 text-4xl opacity-30 animate-pulse">✨</div>
+        <div className="absolute bottom-4 right-4 text-4xl opacity-30 animate-pulse z-0">✨</div>
       </div>
     </div>
   )

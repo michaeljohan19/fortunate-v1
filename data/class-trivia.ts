@@ -3,7 +3,7 @@ export interface TriviaQuestion {
   question: string;
   options: string[];
   correctAnswer: number; // Index of the correct option (0-3)
-  category: 'Hardware' | 'Software' | 'General' | 'Logic' | 'History' | 'Networking' | 'Data';
+  category: 'Hardware' | 'Software' | 'General' | 'Logic' | 'History' | 'Networking' | 'Data'; 
 }
 
 export const TRIVIA_QUESTIONS: TriviaQuestion[] = [

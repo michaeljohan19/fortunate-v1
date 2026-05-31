@@ -7,6 +7,7 @@ import { TaskNotification } from '@/components/task-notif'
 // 👇 1. Import your new AuthScreen component (adjust path if needed)
 import AuthScreen from '@/components/auth-screen' 
 import { auth } from '@/lib/firebase' // Import Firebase auth for logout functionality
+import { WelcomeModal } from '@/components/welcome-modal'
 
 // Main gacha wish page
 export default function Page() {
@@ -46,6 +47,9 @@ export default function Page() {
     <GameProvider userId={userData?.uid}>
       <WishScreen currentUser={userData} onLogout={handleLogout} />
       <TaskNotification />
+      {userData?.uid && (
+        <WelcomeModal userId={userData.uid} />
+      )}
     </GameProvider>
   )
 }

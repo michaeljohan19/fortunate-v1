@@ -19,38 +19,47 @@ export const ClassStanding = () => {
   // 👇 NEW: State for the instruction modal
   const [showInstructions, setShowInstructions] = useState(false);
 
-  // --- REAL-TIME DATABASE LISTENER ---
+ // --- REAL-TIME DATABASE LISTENER ---
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'player_saves'), (snapshot) => {
-      const fetchedPlayers = snapshot.docs.map(doc => {
-        const data = doc.data();
-        
-        const collection = data.collection || [];
-        const fiveStars = collection.filter((c: any) => c.rarity === '5-star').length;
-        const fourStars = collection.filter((c: any) => c.rarity === '4-star').length;
-        
-        // 👇 NEW: We now count 3-stars as well!
-        const threeStars = collection.filter((c: any) => c.rarity === '3-star').length;
-        
-        // 👇 UPDATED: Rating formula now includes the 1pt per 3-star
-        const rating = (fiveStars * 100) + (fourStars * 20) + (threeStars * 1);
+    // 👇 THE FIX: Wait until Firebase confirms the user is logged in
+    const currentUserId = auth.currentUser?.uid;
+    
+    // If auth is still thinking, do nothing and wait.
+    if (!currentUserId) return;
 
-        return {
-          id: doc.id,
-          username: data.username || 'Anonymous Student',
-          profilePicId: data.profilePicId || null,
-          fiveStars,
-          fourStars,
-          rating
-        };
-      });
+    const unsubscribe = onSnapshot(
+      collection(db, 'player_saves'), 
+      (snapshot) => {
+        const fetchedPlayers = snapshot.docs.map(doc => {
+          const data = doc.data();
+          
+          const collection = data.collection || [];
+          const fiveStars = collection.filter((c: any) => c.rarity === '5-star').length;
+          const fourStars = collection.filter((c: any) => c.rarity === '4-star').length;
+          const threeStars = collection.filter((c: any) => c.rarity === '3-star').length;
+          
+          const rating = (fiveStars * 100) + (fourStars * 20) + (threeStars * 1);
 
-      fetchedPlayers.sort((a, b) => b.rating - a.rating);
-      setPlayers(fetchedPlayers.slice(0, 10));
-    });
+          return {
+            id: doc.id,
+            username: data.username || 'Anonymous Student',
+            profilePicId: data.profilePicId || null,
+            fiveStars,
+            fourStars,
+            rating
+          };
+        });
+
+        fetchedPlayers.sort((a, b) => b.rating - a.rating);
+        setPlayers(fetchedPlayers.slice(0, 10));
+      },
+      (error) => {
+        console.warn("Leaderboard syncing delayed.", error.message);
+      }
+    );
 
     return () => unsubscribe();
-  }, []);
+  }, [auth.currentUser?.uid]); // <-- Re-run this effect when the user logs in
 
   // --- GENERATE THE 10 SLOTS ---
   const displaySlots = Array.from({ length: 10 }).map((_, index) => players[index] || null);
