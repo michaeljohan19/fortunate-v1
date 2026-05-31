@@ -5,6 +5,9 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Fortunate',
   description: 'Execute your Luck!',
+  icons: {
+    icon: '/logo.png',
+  },
 }
 
 export default function RootLayout({

@@ -5,12 +5,12 @@ import Image from 'next/image'
 
 const characters = [
   // --- 5-STAR PROFESSORS ---
-  { id: 'mahaguay', name: 'Sir Mahaguay', image: '/characters/prof-alice.jpg', rarity: '5-star', type: 'professor' },
-  { id: 'master', name: 'Sir Rodriguez', rarity: '5-star', type: 'professor', image: '/characters/prof-bob.jpg' },
-  { id: 'cherry', name: "Ma'am Cherry", rarity: '5-star', type: 'professor', image: '/characters/prof-clara.jpg' },
-  { id: 'doc-a', name: 'Doc A.', rarity: '5-star', type: 'professor', image: '/characters/prof-doc-a.jpg' },
-  { id: 'rufo', name: 'Sir Rufo', rarity: '5-star', type: 'professor', image: '/characters/prof-rufo.jpg' },
-  { id: 'meann', name : "Ma'am Meann", rarity: '5-star', type: 'professor', image: '/characters/prof-meann.jpg' },
+  { id: 'mahaguay', name: 'Sir Mahaguay', image: '/characters/mahaguay.png', rarity: '5-star', type: 'professor' },
+  { id: 'master', name: 'Sir Rodriguez', rarity: '5-star', type: 'professor', image: '/characters/master.png' },
+  { id: 'cherry', name: "Ma'am Cherry", rarity: '5-star', type: 'professor', image: '/characters/cherry.png' },
+  { id: 'doc-a', name: 'Doc A.', rarity: '5-star', type: 'professor', image: '/characters/doc-a.png' },
+  { id: 'rufo', name: 'Sir Rufo', rarity: '5-star', type: 'professor', image: '/characters/rufo.png' },
+  { id: 'meann', name : "Ma'am Meann", rarity: '5-star', type: 'professor', image: '/characters/meann.png' },
 
   // --- 5-STAR CLASSMATES ---
   { id: 'aaron', name: 'Aaron', image: '/characters/aaron.png', rarity: '5-star', type: 'classmate' },
@@ -56,7 +56,9 @@ const characters = [
 ]
 
 export const WishBanner: React.FC = () => {
-  const [featured, setFeatured] = useState(characters[0])
+  const [featured, setFeatured] = useState(() => {
+    return characters[Math.floor(Math.random() * characters.length)];
+  });
 
   useEffect(() => {
     const interval = setInterval(() => {

@@ -229,7 +229,7 @@ export const ClassmateCombatGame: React.FC<TerminalCombatProps> = ({ onComplete 
           </button>
 
           <div className="text-7xl mb-6 mt-4">🥊</div>
-          <h2 className="text-4xl font-black text-white mb-4 italic tracking-tighter uppercase">Campus Brawl</h2>
+          <h2 className="text-4xl font-black text-white mb-4 italic tracking-tighter uppercase">Classroom Combat</h2>
           <p className="text-cyan-300 mb-8 max-w-sm mx-auto px-4 text-sm">Choose your best student and battle for coins!</p>
           
           <button 

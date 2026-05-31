@@ -7,6 +7,7 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail
 } from 'firebase/auth';
+import Image from 'next/image';
 
 // --- TYPES ---
 type AuthView = 'login' | 'signup' | 'forgot' | 'choose-username';
@@ -177,18 +178,38 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/15 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-400/10 rounded-full blur-[100px] pointer-events-none" />
+      
+      {/* 👇 UPDATED: Background Ambient Orbs (Cyan & Blue instead of Purple & Yellow) */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10 fade-in">
         
-        <div className="text-center mb-8">
-          <h1 className="text-5xl md:text-6xl font-black italic text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-purple-600 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] tracking-tighter">
-            FORTUNATE
-          </h1>
-          <p className="text-slate-400 font-bold tracking-widest text-sm uppercase mt-2">
-            Execute your Luck!
-          </p>
+        {/* ==========================================
+            HEADER: LOGO & TITLE
+            ========================================== */}
+        <div className="flex items-center justify-center gap-4 mb-8">
+          
+          {/* The Glowing Logo */}
+          <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden shrink-0 bg-slate-900">
+            <Image 
+              src="/logo.png" 
+              alt="Fortunate Logo" 
+              fill 
+              className="object-cover"
+            />
+          </div>
+
+          {/* The Text */}
+          <div className="flex flex-col text-left">
+            <h1 className="text-4xl md:text-5xl font-black italic tracking-wider text-transparent bg-clip-text bg-linear-to-r from-cyan-300 to-blue-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">
+              FORTUNATE
+            </h1>
+            <p className="text-cyan-200/60 text-xs font-bold tracking-[0.2em] uppercase mt-1">
+              Execute Your Luck!
+            </p>
+          </div>
+
         </div>
 
         <div className="bg-slate-800/80 backdrop-blur-md border-4 border-slate-700 rounded-3xl p-6 md:p-8 shadow-2xl">
@@ -203,13 +224,15 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
             <div className="flex bg-slate-900 rounded-xl p-1 mb-8 border-2 border-slate-700">
               <button 
                 onClick={() => { setView('login'); setErrorMsg(''); }}
-                className={`flex-1 py-2 rounded-lg font-black text-sm uppercase tracking-widest transition-all ${view === 'login' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
+                // 👇 UPDATED: Active tab is glowing cyan
+                className={`flex-1 py-2 rounded-lg font-black text-sm uppercase tracking-widest transition-all ${view === 'login' ? 'bg-cyan-500 text-slate-900 shadow-[0_0_15px_rgba(6,182,212,0.5)]' : 'text-slate-500 hover:text-cyan-300'}`}
               >
                 Log In
               </button>
               <button 
                 onClick={() => { setView('signup'); setErrorMsg(''); }}
-                className={`flex-1 py-2 rounded-lg font-black text-sm uppercase tracking-widest transition-all ${view === 'signup' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
+                // 👇 UPDATED: Active tab is glowing cyan
+                className={`flex-1 py-2 rounded-lg font-black text-sm uppercase tracking-widest transition-all ${view === 'signup' ? 'bg-cyan-500 text-slate-900 shadow-[0_0_15px_rgba(6,182,212,0.5)]' : 'text-slate-500 hover:text-cyan-300'}`}
               >
                 Sign Up
               </button>
@@ -225,16 +248,18 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
               
               {view === 'login' && (
                 <div className="text-right">
-                  <button type="button" onClick={() => setView('forgot')} className="text-xs font-black text-yellow-400 hover:text-yellow-300 uppercase tracking-wider transition-colors">
+                  {/* 👇 UPDATED: Cyan text hover */}
+                  <button type="button" onClick={() => setView('forgot')} className="text-xs font-black text-cyan-400 hover:text-cyan-300 uppercase tracking-wider transition-colors">
                     Forgot Password?
                   </button>
                 </div>
               )}
 
+              {/* 👇 UPDATED: Gradient Cyber Button */}
               <button 
                 type="submit" 
                 disabled={isLoading}
-                className={`w-full bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black text-lg uppercase tracking-widest py-4 rounded-xl transform transition-all shadow-[0_0_20px_rgba(250,204,21,0.3)] mt-4 ${isLoading ? 'opacity-50 cursor-not-allowed scale-95' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
+                className={`w-full bg-linear-to-r from-cyan-500 to-blue-600 text-white border border-cyan-400/50 font-black text-lg uppercase tracking-widest py-4 rounded-xl transform transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] mt-4 ${isLoading ? 'opacity-50 cursor-not-allowed scale-95' : 'hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] active:scale-[0.98]'}`}
               >
                 {isLoading ? 'Processing...' : (view === 'login' ? 'Initiate Link' : 'Register Account')}
               </button>
@@ -257,7 +282,6 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
-                {/* 👇 THE FIX: Changes text based on the active tab! */}
                 {view === 'login' ? 'Log in with Google' : 'Sign up with Google'}
               </button>
             </form>
@@ -273,20 +297,22 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
               
               {renderInput('text', 'Enter Username', username, setUsername)}
               
+              {/* 👇 UPDATED: Gradient Cyber Button */}
               <button 
                 type="submit" 
-                className="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-lg uppercase tracking-widest py-4 rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.4)] mt-4 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full bg-linear-to-r from-cyan-500 to-blue-600 border border-cyan-400/50 text-white font-black text-lg uppercase tracking-widest py-4 rounded-xl shadow-[0_0_20px_rgba(34,211,238,0.4)] mt-4 transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] active:scale-[0.98]"
               >
                 Complete Link
               </button>
               
+              {/* 👇 UPDATED: Cyan text hover */}
               <button 
                 type="button" 
                 onClick={() => {
                   auth.signOut();
                   setView('login');
                 }} 
-                className="text-xs font-bold text-slate-500 hover:text-yellow-400 uppercase tracking-widest pt-4 transition-colors"
+                className="text-xs font-bold text-slate-500 hover:text-cyan-400 uppercase tracking-widest pt-4 transition-colors"
               >
                 Cancel Authentication
               </button>
@@ -301,15 +327,18 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
               
               {renderInput('email', 'Email Address', email, setEmail)}
               
+              {/* 👇 UPDATED: Gradient Cyber Button */}
               <button 
                 type="button" 
                 onClick={handleResetPassword}
                 disabled={isLoading} 
-                className={`w-full bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black text-lg uppercase tracking-widest py-4 rounded-xl shadow-[0_0_20px_rgba(250,204,21,0.3)] mt-4 transition-all ${isLoading ? 'opacity-50' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
+                className={`w-full bg-linear-to-r from-cyan-500 to-blue-600 border border-cyan-400/50 text-white font-black text-lg uppercase tracking-widest py-4 rounded-xl shadow-[0_0_20px_rgba(34,211,238,0.4)] mt-4 transition-all ${isLoading ? 'opacity-50' : 'hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] active:scale-[0.98]'}`}
               >
                 {isLoading ? 'Processing...' : 'Send Link'}
               </button>
-              <button type="button" onClick={() => setView('login')} className="text-xs font-bold text-slate-500 hover:text-purple-400 uppercase tracking-widest pt-4 transition-colors">
+              
+              {/* 👇 UPDATED: Cyan text hover */}
+              <button type="button" onClick={() => setView('login')} className="text-xs font-bold text-slate-500 hover:text-cyan-400 uppercase tracking-widest pt-4 transition-colors">
                 Cancel Override
               </button>
             </div>

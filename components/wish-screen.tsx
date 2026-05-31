@@ -230,9 +230,26 @@ const gameTitles: Record<string, string> = {
   return (
     <div className="w-screen h-screen bg-background text-foreground overflow-hidden flex flex-col">
       {/* Top Navigation Bar */}
-      <nav className="w-full bg-slate-900/80 backdrop-blur-sm border-b-2 border-amber-400/20 px-4 md:px-8 py-3 flex justify-between items-center z-40">
-        <div className="text-xl md:text-2xl font-black" style={{ backgroundImage: 'linear-gradient(90deg, #ffd700, #00bfff)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>
-          FORTUNATE
+      {/* 👇 UPDATED: Changed the bottom border from amber to cyan */}
+      <nav className="w-full bg-slate-900/80 backdrop-blur-sm border-b-2 border-cyan-400/30 px-4 md:px-8 py-3 flex justify-between items-center z-40">
+        
+        {/* LEFT SIDE: Logo & Title */}
+        <div className="flex items-center gap-3">
+          
+          {/* 👇 NEW: The Logo (Sized for the Nav Bar) */}
+          <div className="relative w-8 h-8 md:w-10 md:h-10 shrink-0">
+            <Image 
+              src="/logo.png" 
+              alt="Fortunate Logo" 
+              fill 
+              className="object-cover"
+            />
+          </div>
+          
+          {/* 👇 UPDATED: Cyan/Blue glowing text using Tailwind instead of inline styles */}
+          <div className="text-xl md:text-2xl font-black italic tracking-wider text-transparent bg-clip-text bg-linear-to-r from-cyan-300 to-blue-500 drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]">
+            FORTUNATE
+          </div>
         </div>
 
         {/* Navigation items - hidden on mobile */}

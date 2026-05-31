@@ -11,7 +11,7 @@ const games = [
   { id: 'clicker', icon: '☕', name: 'Cafe Clicker', description: 'Click click click! Faster = more coins', reward: '+20-100 coins' },
   { id: 'syntax', icon: '🔴', name: 'Syntax Spotter', description: 'Find the error in code', reward: '+25 coins' },
   { id: 'crop-sorter', icon: '🌱', name: 'Agrivision Rush', description: 'Swipe to sort diseased crops', reward: '+15-40 coins' },
-  { id: 'runner', icon: '🏃', name: 'Coffee Run', description: 'Endless runner delivery game', reward: '+5-60 coins' },
+  { id: 'runner', icon: '🏃', name: 'Caffeine Rush', description: 'Endless runner delivery game', reward: '+5-60 coins' },
   { id: 'bug-shot', icon: '🐛', name: 'Bug Shot', description: 'Defend against incoming bugs', reward: '+20-35 coins' },
   { id: 'memory', icon: '🎮', name: 'Memory Match', description: 'Match pairs and remember', reward: '+25-45 coins' },
   { id: 'syntax-sprint', icon: '⌨️', name: 'Syntax Sprint', description: 'Type code snippets quickly', reward: '+30-60 coins' },
