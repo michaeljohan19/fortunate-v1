@@ -66,7 +66,15 @@ const SLIDES = [
     color: "text-purple-400",
     bgGlow: "bg-purple-400/20",
     borderColor: "border-purple-400/50"
-  }
+  },
+  {
+    title: "Customize your profile!",
+    description: "Change your profile avatar with your favorite characters!",
+    icon: "🙍",
+    color: "text-orange-400",
+    bgGlow: "bg-orange-400/20",
+    borderColor: "border-orange-400/50"
+  },
 ];
 
 export const WelcomeModal = ({ userId }: { userId: string }) => {
